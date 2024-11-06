@@ -1,0 +1,38 @@
+version: '3.7'
+services:
+  postgres:
+    image: postgres:13.11-alpine3.18@sha256:fc2932a3a1e3776c1b0cb703cff16d26b6cdd57927d66b115cef2e3e2b080cc0
+    restart: 'always'
+    container_name: notifications-recipient-postgres
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: notifications-recipient-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: notifications-kafka
+    ports:
+      - 9092:9092
+      - 9094:9094
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_BROKER_ID=0
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@notifications-kafka:9094
+      - KAFKA_KRAFT_CLUSTER_ID=r4zt_wrqTRuT7W2NJsB_GA
+  kafka-ui:
+    container_name: notifications-kafka-ui
+    image: 'provectuslabs/kafka-ui:latest'
+    ports:
+      - 8085:8085
+    environment:
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=notifications-kafka:9092
+      - KAFKA_CLUSTERS_0_NAME=r4zt_wrqTRuT7W2NJsB_GA
